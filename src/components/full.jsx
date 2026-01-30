@@ -43,16 +43,36 @@ export default function Full() {
   const [selected, setSelected] = useState([])
   const [previousView, setPreviousView] = useState("all")
   const [title, setTitle] = useState("")
+const [userReady, setUserReady] = useState(false)
+
+useEffect(() => {
+  const initAuth = async () => {
+    // check if a user already exists
+    const { data } = await supabase.auth.getUser()
+
+    if (!data.user) {
+      // if not, create one
+      const { data: newUser } = await supabase.auth.signInAnonymously()
+      if (newUser?.user) setUserReady(true)
+    } else {
+      setUserReady(true)
+    }
+  }
+
+  initAuth()
+}, [])
 
 
 
   useEffect(() => {
+    if (!userReady) return
     loadNotes("active")
-  }, [sort])
+  }, [sort, userReady])
+
 
   async function loadNotes(status) {
     const { data } = await supabase
-      .from("notes_v2")
+      .from("notes_simple")
       .select("*")
       .eq("status", status)
 
@@ -72,7 +92,7 @@ export default function Full() {
 
   async function createNote() {
     const { data } = await supabase
-      .from("notes_v2")
+      .from("notes_simple")
       .insert({
         title: "Untitled",
         content: "<h1>Untitled</h1>",
@@ -97,7 +117,7 @@ export default function Full() {
 
   async function saveNote() {
     await supabase
-      .from("notes_v2")
+      .from("notes_simple")
       .update({
         title,
         content,
@@ -111,9 +131,9 @@ export default function Full() {
   async function setStatus(note, status) {
     if (status === "permanent") {
       if (!confirm("Delete permanently?")) return
-      await supabase.from("notes_v2").delete().eq("id", note.id)
+      await supabase.from("notes_simple").delete().eq("id", note.id)
     } else {
-      await supabase.from("notes_v2").update({ status }).eq("id", note.id)
+      await supabase.from("notes_simple").update({ status }).eq("id", note.id)
     }
     changeView(view)
   }
@@ -133,7 +153,7 @@ export default function Full() {
     }
 
     await supabase
-      .from("notes_v2")
+      .from("notes_simple")
       .update({ status })
       .in("id", selected)
 
@@ -168,7 +188,7 @@ export default function Full() {
                 variant="destructive"
                 onClick={async () => {
                   await supabase
-                    .from("notes_v2")
+                    .from("notes_simple")
                     .delete()
                     .in("id", selected)
 
