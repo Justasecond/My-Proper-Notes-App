@@ -17,6 +17,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
+
 const VIEW_LABELS = {
   all: "All Notes",
   archived: "Archived Notes",
