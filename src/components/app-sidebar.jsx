@@ -10,7 +10,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { Notebook, Search } from "lucide-react"
-
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 export function AppSidebar({ onSelectView, search, setSearch }) {
   return (
     <Sidebar collapsible="offcanvas">
@@ -49,6 +49,7 @@ export function AppSidebar({ onSelectView, search, setSearch }) {
               onChange={e => setSearch(e.target.value)}
               className="bg-transparent outline-none text-sm w-full"
             />
+        <AnimatedThemeToggler />
           </div>
         </div>
       </SidebarContent>

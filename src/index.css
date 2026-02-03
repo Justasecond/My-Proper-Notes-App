@@ -129,3 +129,20 @@
 .ProseMirror:focus {
   outline: none !important;
 }
+
+.prose h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.prose h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}

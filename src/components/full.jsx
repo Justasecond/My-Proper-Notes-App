@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   CheckSquare,
 } from "lucide-react"
-
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { AppSidebar } from "@/components/app-sidebar"
 import RichEditor from "@/components/rich-editor"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-
 
 const VIEW_LABELS = {
   all: "All Notes",
@@ -43,32 +42,25 @@ export default function Full() {
   const [selected, setSelected] = useState([])
   const [previousView, setPreviousView] = useState("all")
   const [title, setTitle] = useState("")
-const [userReady, setUserReady] = useState(false)
+  const [userReady, setUserReady] = useState(false)
 
-useEffect(() => {
-  const initAuth = async () => {
-    // check if a user already exists
-    const { data } = await supabase.auth.getUser()
-
-    if (!data.user) {
-      // if not, create one
-      const { data: newUser } = await supabase.auth.signInAnonymously()
-      if (newUser?.user) setUserReady(true)
-    } else {
-      setUserReady(true)
+  useEffect(() => {
+    const initAuth = async () => {
+      const { data } = await supabase.auth.getUser()
+      if (!data.user) {
+        const { data: newUser } = await supabase.auth.signInAnonymously()
+        if (newUser?.user) setUserReady(true)
+      } else {
+        setUserReady(true)
+      }
     }
-  }
-
-  initAuth()
-}, [])
-
-
+    initAuth()
+  }, [])
 
   useEffect(() => {
     if (!userReady) return
     loadNotes("active")
   }, [sort, userReady])
-
 
   async function loadNotes(status) {
     const { data } = await supabase
@@ -88,54 +80,6 @@ useEffect(() => {
 
   function selectAll() {
     setSelected(notes.map(n => n.id))
-  }
-
-  async function createNote() {
-    const { data } = await supabase
-      .from("notes_simple")
-      .insert({
-        title: "Untitled",
-        content: "<h1>Untitled</h1>",
-        status: "active",
-        bg_color: "#ffffff",
-      })
-      .select()
-      .single()
-
-    setActiveNote(data)
-    setContent(data.content)
-    setBgColor(data.bg_color)
-  }
-
-  function openNote(note) {
-    setPreviousView(view)
-    setActiveNote(note)
-    setTitle(note.title)
-    setContent(note.content)
-    setBgColor(note.bg_color)
-  }
-
-  async function saveNote() {
-    await supabase
-      .from("notes_simple")
-      .update({
-        title,
-        content,
-        bg_color: bgColor,
-      })
-      .eq("id", activeNote.id)
-
-    changeView("all")
-  }
-
-  async function setStatus(note, status) {
-    if (status === "permanent") {
-      if (!confirm("Delete permanently?")) return
-      await supabase.from("notes_simple").delete().eq("id", note.id)
-    } else {
-      await supabase.from("notes_simple").update({ status }).eq("id", note.id)
-    }
-    changeView(view)
   }
 
   function toggleSelect(id) {
@@ -160,13 +104,54 @@ useEffect(() => {
     changeView(view)
   }
 
+  async function createNote() {
+    const { data } = await supabase
+      .from("notes_simple")
+      .insert({
+        title: "Untitled",
+        content: "Replace This",
+        status: "active",
+        bg_color: "#ffffff",
+      })
+      .select()
+      .single()
+
+    setActiveNote(data)
+    setContent(data.content)
+    setBgColor(data.bg_color)
+  }
+
+  function openNote(note) {
+    setPreviousView(view)
+    setActiveNote(note)
+    setTitle(note.title)
+    setContent(note.content)
+    setBgColor(note.bg_color)
+  }
+
+  async function saveNote() {
+    await supabase
+      .from("notes_simple")
+      .update({ title, content, bg_color: bgColor })
+      .eq("id", activeNote.id)
+
+    changeView("all")
+  }
+
+  async function setStatus(note, status) {
+    if (status === "permanent") {
+      if (!confirm("Delete permanently?")) return
+      await supabase.from("notes_simple").delete().eq("id", note.id)
+    } else {
+      await supabase.from("notes_simple").update({ status }).eq("id", note.id)
+    }
+    changeView(view)
+  }
+
   return (
     <SidebarProvider>
-      <AppSidebar
-        onSelectView={changeView}
-        search={search}
-        setSearch={setSearch}
-      />
+      <AppSidebar onSelectView={changeView} search={search} setSearch={setSearch} />
+
       {showConfirm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-[320px] space-y-4">
@@ -178,10 +163,7 @@ useEffect(() => {
             </p>
 
             <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setShowConfirm(false)}
-              >
+              <Button variant="ghost" onClick={() => setShowConfirm(false)}>
                 Cancel
               </Button>
               <Button
@@ -244,7 +226,6 @@ useEffect(() => {
                 </div>
               )}
 
-              {/* BIG SQUARE GRID */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {notes
                   .filter(n =>
@@ -254,32 +235,30 @@ useEffect(() => {
                     <div
                       key={note.id}
                       onClick={() => openNote(note)}
-                      className="group relative rounded-2xl pt-8 pl-8 min-h-[160px] cursor-pointer shadow hover:shadow-lg transition"
+                      className="group relative rounded-2xl p-6 min-h-[180px] cursor-pointer shadow hover:shadow-lg transition"
                       style={{ background: note.bg_color }}
                     >
                       <CheckSquare
                         size={18}
-                        className={`absolute top-3 left-3 cursor-pointer ${selected.includes(note.id)
-                          ? "text-blue-600"
-                          : "opacity-30"
-                          }`}
+                        className={`absolute top-3 left-3 cursor-pointer ${
+                          selected.includes(note.id)
+                            ? "text-blue-600"
+                            : "opacity-30"
+                        }`}
                         onClick={e => {
                           e.stopPropagation()
                           toggleSelect(note.id)
                         }}
                       />
 
-                      <h3 className="font-semibold text-lg line-clamp-2">
+                      <h3 className="font-semibold text-lg line-clamp-2 pt-2 pr-6">
                         {note.title}
                       </h3>
 
-                      <p
-                        className="mt-2 text-sm text-muted-foreground line-clamp-4"
-                        dangerouslySetInnerHTML={{
-                          __html: note.content.replace(/<[^>]+>/g, "")
-                        }}
+                      <div
+                        className="mt-2 text-sm text-muted-foreground line-clamp-4 pr-6"
+                        dangerouslySetInnerHTML={{ __html: note.content }}
                       />
-
 
                       <div className="absolute bottom-3 right-3 hidden group-hover:flex gap-2">
                         {view === "all" && (
@@ -291,6 +270,7 @@ useEffect(() => {
                             }}
                           />
                         )}
+
                         {view !== "deleted" && (
                           <Trash2
                             size={16}
@@ -300,6 +280,7 @@ useEffect(() => {
                             }}
                           />
                         )}
+
                         {view === "deleted" && (
                           <Archive
                             size={16}
@@ -309,6 +290,7 @@ useEffect(() => {
                             }}
                           />
                         )}
+
                         {view === "deleted" && (
                           <Trash2
                             size={16}
@@ -339,7 +321,6 @@ useEffect(() => {
               className="rounded-xl border p-6 space-y-4"
               style={{ background: bgColor }}
             >
-
               <Button
                 variant="ghost"
                 className="flex gap-2"
@@ -347,20 +328,19 @@ useEffect(() => {
               >
                 <ArrowLeft size={16} /> Back
               </Button>
+
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Note title..."
                 className="w-full text-2xl font-bold bg-transparent outline-none border-b pb-2"
-                style={{
-                  color: bgColor === "#000000" ? "white" : "black",
-                }}
               />
+
               <input
                 type="color"
                 value={bgColor}
                 onChange={e => setBgColor(e.target.value)}
-                className="w-10 h-10 cursor-pointer"
+                className="w-10 h-10"
               />
 
               <RichEditor
